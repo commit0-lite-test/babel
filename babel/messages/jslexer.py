@@ -35,19 +35,66 @@ def get_rules(jsx: bool, dotted: bool, template_string: bool) -> list[tuple[str 
 
     Internal to this module.
     """
-    pass
+    rules = _rules.copy()
+    if not jsx:
+        rules = [r for r in rules if r[0] != 'jsx_tag']
+    if not dotted:
+        rules = [r for r in rules if r[0] != 'dotted_name']
+    if not template_string:
+        rules = [r for r in rules if r[0] != 'template_string']
+    return rules
 
 def indicates_division(token: Token) -> bool:
     """A helper function that helps the tokenizer to decide if the current
     token may be followed by a division operator.
     """
-    pass
+    if token.type == 'number' or token.type == 'name':
+        return True
+    if token.type == 'operator':
+        return token.value in [')', ']', '}', '++', '--']
+    return False
 
 def unquote_string(string: str) -> str:
     """Unquote a string with JavaScript rules.  The string has to start with
     string delimiters (``'``, ``"`` or the back-tick/grave accent (for template strings).)
     """
-    pass
+    quote = string[0]
+    if quote not in ("'", '"', '`'):
+        raise ValueError('string must start with a quote')
+    string = string[1:-1]
+    result = []
+    pos = 0
+    while pos < len(string):
+        if string[pos] != '\\':
+            result.append(string[pos])
+            pos += 1
+        else:
+            pos += 1
+            if pos >= len(string):
+                raise ValueError('Invalid escape sequence')
+            ch = string[pos]
+            if ch in escapes:
+                result.append(escapes[ch])
+            elif ch == 'u':
+                pos += 1
+                value = uni_escape_re.match(string[pos:pos + 4])
+                if value is None:
+                    raise ValueError('Invalid unicode escape')
+                value = int(value.group(), 16)
+                result.append(chr(value))
+                pos += 3
+            elif ch == 'x':
+                pos += 1
+                value = hex_escape_re.match(string[pos:pos + 2])
+                if value is None:
+                    raise ValueError('Invalid hex escape')
+                value = int(value.group(), 16)
+                result.append(chr(value))
+                pos += 1
+            else:
+                result.append(ch)
+            pos += 1
+    return ''.join(result)
 
 def tokenize(source: str, jsx: bool=True, dotted: bool=True, template_string: bool=True, lineno: int=1) -> Generator[Token, None, None]:
     """
@@ -58,4 +105,56 @@ def tokenize(source: str, jsx: bool=True, dotted: bool=True, template_string: bo
     :param template_string: Support ES6 template strings
     :param lineno: starting line number (optional)
     """
-    pass
+    rules = get_rules(jsx, dotted, template_string)
+    source = source.replace('\r\n', '\n').replace('\r', '\n') + '\n'
+    pos = 0
+    end = len(source)
+    last_token = None
+
+    while pos < end:
+        for token_type, rule in rules:
+            match = rule.match(source, pos)
+            if match is not None:
+                break
+        else:
+            # if we don't have a match we skip the character
+            yield Token('operator', source[pos], lineno)
+            pos += 1
+            continue
+
+        groups = match.groups()
+        if token_type is None:
+            pos = match.end()
+            continue
+        elif token_type == 'linecomment':
+            # update line number
+            lineno += line_re.findall(groups[0]).__len__()
+        elif token_type == 'multilinecomment':
+            # update line number
+            lineno += line_re.findall(groups[0]).__len__()
+        elif token_type == 'name':
+            value = groups[0]
+            if last_token is not None:
+                if indicates_division(last_token):
+                    if division_re.match(source, pos) is not None:
+                        yield Token('operator', source[pos], lineno)
+                        pos += 1
+                        continue
+                    regex = regex_re.match(source, pos)
+                    if regex is not None:
+                        yield Token('regex', regex.group(), lineno)
+                        pos = regex.end()
+                        continue
+            yield Token(token_type, value, lineno)
+        elif token_type in ('string', 'template_string'):
+            try:
+                value = unquote_string(groups[0])
+            except ValueError:
+                value = groups[0]
+            lineno += line_re.findall(value).__len__()
+            yield Token(token_type, value, lineno)
+        else:
+            yield Token(token_type, groups[0], lineno)
+
+        last_token = Token(token_type, groups[0], lineno)
+        pos = match.end()
