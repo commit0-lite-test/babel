@@ -183,7 +183,10 @@ class Locale:
         :param available: the list of locale identifiers available
         :param aliases: a dictionary of aliases for locale identifiers
         """
-        pass
+        locale_identifier = negotiate_locale(preferred, available, sep, aliases)
+        if locale_identifier:
+            return cls.parse(locale_identifier, sep)
+        return None
 
     @classmethod
     def parse(cls, identifier: str | Locale | None, sep: str='_', resolve_likely_subtags: bool=True) -> Locale:
