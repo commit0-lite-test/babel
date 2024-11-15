@@ -41,7 +41,8 @@ def get_official_languages(
 
     # Sort languages by population percentage (descending order)
     official_languages.sort(
-        key=lambda x: territory_data[x].get("population_percent", 0), reverse=True
+        key=lambda x: territory_data[x].get("population_percent", 0),
+        reverse=True,
     )
 
     return tuple(official_languages)
