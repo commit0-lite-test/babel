@@ -28,6 +28,7 @@ if TYPE_CHECKING:
 
     _MessageID: TypeAlias = str | tuple[str, ...] | list[str]
 
+from babel.messages import catalog_utils
 from babel.messages.catalog_utils import (
     _get_header_comment,
     _get_locale,
@@ -131,27 +132,26 @@ class Message:
     def __lt__(self, other: object) -> bool:
         if not isinstance(other, Message):
             return NotImplemented
-        return self.id < other.id
+        return str(self.id) < str(other.id)
 
     def __gt__(self, other: object) -> bool:
         if not isinstance(other, Message):
             return NotImplemented
-        return self.id > other.id
-
-    def __lt__(self, other: object) -> bool:
-        return self.__cmp__(other) < 0
-
-    def __ge__(self, other: object) -> bool:
-        return self.__cmp__(other) >= 0
-
-    def __le__(self, other: object) -> bool:
-        return self.__cmp__(other) <= 0
+        return str(self.id) > str(other.id)
 
     def __eq__(self, other: object) -> bool:
-        return self.__cmp__(other) == 0
+        if not isinstance(other, Message):
+            return NotImplemented
+        return self.id == other.id
 
     def __ne__(self, other: object) -> bool:
-        return self.__cmp__(other) != 0
+        return not self.__eq__(other)
+
+    def __le__(self, other: object) -> bool:
+        return self.__lt__(other) or self.__eq__(other)
+
+    def __ge__(self, other: object) -> bool:
+        return self.__gt__(other) or self.__eq__(other)
 
     def is_identical(self, other: Message) -> bool:
         """Checks whether messages are identical, taking into account all
@@ -661,7 +661,7 @@ class Catalog:
                         # Try to find a fuzzy match for the message
                         fuzzy_matches = get_close_matches(
                             self._to_fuzzy_match_key(message.id),
-                            [self._to_fuzzy_match_key(key) for key in remaining.keys()],
+                            [self._to_fuzzy_match_key(str(key)) for key in remaining.keys()],
                             n=1,
                             cutoff=0.7,
                         )
