@@ -22,9 +22,10 @@ from typing import TYPE_CHECKING
 from babel.core import Locale
 from babel.messages.plurals import get_plural
 from babel.util import LOCALTZ, distinct
+from email import message_from_string
 
 if TYPE_CHECKING:
-    from typing_extensions import TypeAlias
+    from typing import TypeAlias
 
     _MessageID: TypeAlias = str | tuple[str, ...] | list[str]
 
@@ -128,18 +129,15 @@ class Message:
     def __repr__(self) -> str:
         return f"<{type(self).__name__} {self.id!r} (flags: {list(self.flags)!r})>"
 
-    def __cmp__(self, other: object) -> int:
-        """Compare Messages, taking into account plural ids"""
-
-        def values_to_compare(obj):
-            if isinstance(obj, Message) and obj.pluralizable:
-                return (obj.id[0], obj.context or "")
-            return (obj.id, obj.context or "")
-
-        return _cmp(values_to_compare(self), values_to_compare(other))
+    def __lt__(self, other: object) -> bool:
+        if not isinstance(other, Message):
+            return NotImplemented
+        return self.id < other.id
 
     def __gt__(self, other: object) -> bool:
-        return self.__cmp__(other) > 0
+        if not isinstance(other, Message):
+            return NotImplemented
+        return self.id > other.id
 
     def __lt__(self, other: object) -> bool:
         return self.__cmp__(other) < 0
@@ -373,7 +371,7 @@ class Catalog:
         :type: `int`"""
         if self._num_plurals is None:
             if self.locale:
-                self._num_plurals = get_plural(self.locale)[0]
+                self._num_plurals = get_plural(str(self.locale))[0]
             else:
                 self._num_plurals = 2
         return self._num_plurals
@@ -392,7 +390,7 @@ class Catalog:
         :type: `str`"""
         if self._plural_expr is None:
             if self.locale:
-                self._plural_expr = get_plural(self.locale)[1]
+                self._plural_expr = get_plural(str(self.locale))[1]
             else:
                 self._plural_expr = "(n != 1)"
         return self._plural_expr
@@ -449,7 +447,10 @@ class Catalog:
 
         :param id: the message ID
         """
-        return self.get(id)
+        message = self.get(id)
+        if message is None:
+            raise KeyError(id)
+        return message
 
     def __setitem__(self, id: _MessageID, message: Message) -> None:
         """Add or update the message with the specified ID.
@@ -490,7 +491,8 @@ class Catalog:
             current.flags |= message.flags
             message = current
         elif id == "":
-            self.mime_headers = message_from_string(message.string).items()
+            if isinstance(message.string, str):
+                self.mime_headers = message_from_string(message.string).items()
             self.header_comment = "\n".join(
                 [f"# {c}".rstrip() for c in message.user_comments]
             )
@@ -673,7 +675,7 @@ class Catalog:
                                     if self._to_fuzzy_match_key(key) == fuzzy_match_key
                                 )
                             )
-                            current.fuzzy = True
+                            current.flags.add("fuzzy")
                     if current is None:
                         current = Message(
                             message.id,
