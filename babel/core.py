@@ -13,7 +13,7 @@ from __future__ import annotations
 import os
 import pickle
 from collections.abc import Iterable, Mapping
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Union
 
 from babel import localedata
 from babel.plural import PluralRule
@@ -26,7 +26,7 @@ __all__ = [
     "parse_locale",
 ]
 if TYPE_CHECKING:
-    from typing_extensions import Literal, TypeAlias
+    from typing import Literal, TypeAlias
 
     _GLOBAL_KEY: TypeAlias = Literal[
         "all_currencies",
@@ -351,15 +351,14 @@ class Locale:
         return cls(lang, territory, script, variant, modifier)
 
     def __eq__(self, other: object) -> bool:
-        for key in ("language", "territory", "script", "variant", "modifier"):
-            if not hasattr(other, key):
-                return False
+        if not isinstance(other, Locale):
+            return NotImplemented
         return (
             self.language == other.language
             and self.territory == other.territory
-            and (self.script == other.script)
-            and (self.variant == other.variant)
-            and (self.modifier == other.modifier)
+            and self.script == other.script
+            and self.variant == other.variant
+            and self.modifier == other.modifier
         )
 
     def __ne__(self, other: object) -> bool:
