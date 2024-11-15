@@ -4,6 +4,7 @@ except ModuleNotFoundError:
     pytz = None
     import zoneinfo
 
+
 def _get_tzinfo(tzenv: str):
     """Get the tzinfo from `zoneinfo` or `pytz`
 
