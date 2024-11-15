@@ -337,7 +337,7 @@ class Catalog:
         'nplurals=2; plural=(n > 1);'
 
         :type: `str`"""
-        pass
+        return f'nplurals={self.num_plurals}; plural={self.plural_expr};'
 
     def __contains__(self, id: _MessageID) -> bool:
         """Return whether the catalog has a message with the specified ID."""
@@ -563,7 +563,11 @@ class Catalog:
         messages, but is a ``(msgid, msgctxt)`` tuple for context-specific
         messages.
         """
-        pass
+        if isinstance(id, (list, tuple)):
+            id = id[0]
+        if context is not None:
+            return (id, context)
+        return id
 
     def is_identical(self, other: Catalog) -> bool:
         """Checks if catalogs are identical, taking into account messages and
