@@ -88,6 +88,9 @@ class CommandMixin:
         self.help = 0
         self.finalized = 0
 
+    def initialize_options(self):
+        pass
+
 
 class CompileCatalog(CommandMixin):
     description = "compile message catalogs to binary MO files"
