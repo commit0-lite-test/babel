@@ -17,10 +17,16 @@ if TYPE_CHECKING:
 _plural_tags = ('zero', 'one', 'two', 'few', 'many', 'other')
 _fallback_tag = 'other'
 
-def extract_operands(source: float | decimal.Decimal) -> tuple[decimal.Decimal | int, int, int, int, int, int, Literal[0], Literal[0]]:
-    """Extract operands from a decimal, a float or an int, according to `CLDR rules`_.
-
-    The result is an 8-tuple (n, i, v, w, f, t, c, e), where those symbols are as follows:
+    Symbol Value
+    ------ ---------------------------------------------------------------
+    n      absolute value of the source number (integer and decimals).
+    i      integer digits of n.
+    v      number of visible fraction digits in n, with trailing zeros.
+    w      number of visible fraction digits in n, without trailing zeros.
+    f      visible fractional digits in n, with trailing zeros.
+    t      visible fractional digits in n, without trailing zeros.
+    c      compact decimal exponent value: exponent of the power of 10 used in compact decimal formatting.
+    e      currently, synonym for 'c'. however, may be redefined in the future.
 
     ====== ===============================================================
     Symbol Value
@@ -101,7 +107,9 @@ class PluralRule:
         :param rules: the rules as list or dict, or a `PluralRule` object
         :raise RuleError: if the expression is malformed
         """
-        pass
+        if isinstance(rules, PluralRule):
+            return rules
+        return cls(rules)
 
     @property
     def rules(self) -> Mapping[str, str]:
@@ -111,7 +119,7 @@ class PluralRule:
         >>> rule.rules
         {'one': 'n is 1'}
         """
-        pass
+        return {tag: _UnicodeCompiler().compile(ast) for tag, ast in self.abstract}
 
     @property
     def tags(self) -> frozenset[str]:
@@ -119,7 +127,7 @@ class PluralRule:
         ``'other'`` rules is not part of this set unless there is an explicit
         rule for it.
         """
-        pass
+        return frozenset(tag for tag, _ in self.abstract)
 
     def __getstate__(self) -> list[tuple[str, Any]]:
         return self.abstract
@@ -147,7 +155,16 @@ def to_javascript(rule: Mapping[str, str] | Iterable[tuple[str, str]] | PluralRu
     :param rule: the rules as list or dict, or a `PluralRule` object
     :raise RuleError: if the expression is malformed
     """
-    pass
+    if not isinstance(rule, PluralRule):
+        rule = PluralRule.parse(rule)
+    
+    compiler = _JavaScriptCompiler()
+    parts = []
+    for tag, ast in rule.abstract:
+        expr = compiler.compile(ast)
+        parts.append(f"({expr}) ? '{tag}' : ")
+    parts.append("'other'")
+    return f"(function(n) {{ return {' '.join(parts)}; }})"
 
 def to_python(rule: Mapping[str, str] | Iterable[tuple[str, str]] | PluralRule) -> Callable[[float | decimal.Decimal], str]:
     """Convert a list/dict of rules or a `PluralRule` object into a regular
@@ -168,7 +185,20 @@ def to_python(rule: Mapping[str, str] | Iterable[tuple[str, str]] | PluralRule) 
     :param rule: the rules as list or dict, or a `PluralRule` object
     :raise RuleError: if the expression is malformed
     """
-    pass
+    if not isinstance(rule, PluralRule):
+        rule = PluralRule.parse(rule)
+    
+    compiler = _PythonCompiler()
+    parts = []
+    for tag, ast in rule.abstract:
+        expr = compiler.compile(ast)
+        parts.append(f"if {expr}: return '{tag}'")
+    parts.append("return 'other'")
+    
+    code = '\n'.join(parts)
+    namespace = {'MOD': cldr_modulo, 'extract_operands': extract_operands}
+    exec(f"def plural(n):\n    n, i, v, w, f, t, c, e = extract_operands(n)\n    {code}", namespace)
+    return namespace['plural']
 
 def to_gettext(rule: Mapping[str, str] | Iterable[tuple[str, str]] | PluralRule) -> str:
     """The plural rule as gettext expression.  The gettext expression is
@@ -180,7 +210,18 @@ def to_gettext(rule: Mapping[str, str] | Iterable[tuple[str, str]] | PluralRule)
     :param rule: the rules as list or dict, or a `PluralRule` object
     :raise RuleError: if the expression is malformed
     """
-    pass
+    if not isinstance(rule, PluralRule):
+        rule = PluralRule.parse(rule)
+    
+    compiler = _GettextCompiler()
+    parts = []
+    for idx, (tag, ast) in enumerate(rule.abstract):
+        expr = compiler.compile(ast)
+        parts.append(f"({expr}) ? {idx} : ")
+    parts.append(str(len(rule.abstract)))
+    
+    plural_expr = ''.join(parts)
+    return f"nplurals={len(rule.abstract) + 1}; plural=({plural_expr});"
 
 def in_range_list(num: float | decimal.Decimal, range_list: Iterable[Iterable[float | decimal.Decimal]]) -> bool:
     """Integer range list test.  This is the callback for the "in" operator
@@ -199,7 +240,18 @@ def in_range_list(num: float | decimal.Decimal, range_list: Iterable[Iterable[fl
     >>> in_range_list(10, [(1, 4), (6, 8)])
     False
     """
-    pass
+    if isinstance(num, float):
+        num = decimal.Decimal(str(num))
+    
+    for range_item in range_list:
+        if isinstance(range_item, (int, float, decimal.Decimal)):
+            if num == range_item:
+                return True
+        else:
+            start, end = range_item
+            if start <= num <= end and num.to_integral_value() == num:
+                return True
+    return False
 
 def within_range_list(num: float | decimal.Decimal, range_list: Iterable[Iterable[float | decimal.Decimal]]) -> bool:
     """Float range test.  This is the callback for the "within" operator
@@ -218,7 +270,18 @@ def within_range_list(num: float | decimal.Decimal, range_list: Iterable[Iterabl
     >>> within_range_list(10.5, [(1, 4), (20, 30)])
     False
     """
-    pass
+    if isinstance(num, float):
+        num = decimal.Decimal(str(num))
+    
+    for range_item in range_list:
+        if isinstance(range_item, (int, float, decimal.Decimal)):
+            if num == range_item:
+                return True
+        else:
+            start, end = range_item
+            if start <= num <= end:
+                return True
+    return False
 
 def cldr_modulo(a: float, b: float) -> float:
     """Javaish modulo.  This modulo operator returns the value with the sign
