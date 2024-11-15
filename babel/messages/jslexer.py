@@ -213,16 +213,16 @@ def tokenize(
             continue
 
         groups = match.groups()
-        if token_type is None:
+        if _token_type is None:
             pos = match.end()
             continue
-        elif token_type == "linecomment":
+        elif _token_type == "linecomment":
             # update line number
             lineno += line_re.findall(groups[0]).__len__()
-        elif token_type == "multilinecomment":
+        elif _token_type == "multilinecomment":
             # update line number
             lineno += line_re.findall(groups[0]).__len__()
-        elif token_type == "name":
+        elif _token_type == "name":
             value = groups[0]
             if last_token is not None:
                 if indicates_division(last_token):
@@ -235,16 +235,16 @@ def tokenize(
                         yield Token("regex", regex.group(), lineno)
                         pos = regex.end()
                         continue
-            yield Token(token_type, value, lineno)
-        elif token_type in ("string", "template_string"):
+            yield Token(_token_type, value, lineno)
+        elif _token_type in ("string", "template_string"):
             try:
                 value = unquote_string(groups[0])
             except ValueError:
                 value = groups[0]
             lineno += line_re.findall(value).__len__()
-            yield Token(token_type, value, lineno)
+            yield Token(_token_type, value, lineno)
         else:
-            yield Token(token_type, groups[0], lineno)
+            yield Token(_token_type, groups[0], lineno)
 
-        last_token = Token(token_type, groups[0], lineno)
+        last_token = Token(_token_type, groups[0], lineno)
         pos = match.end()
