@@ -96,7 +96,7 @@ _rules: list[tuple[str | None, re.Pattern[str]]] = [
         ),
     ),
     ("jsx_tag", re.compile("(?:</?[^>\\s]+|/>)", re.I)),
-    ("operator", re.compile("(%s)" % "|".join(map(re.escape, operators)))),
+    ("operator", re.compile("({})".format("|".join(map(re.escape, operators))))),
     ("template_string", re.compile("`(?:[^`\\\\]*(?:\\\\.[^`\\\\]*)*)`", re.UNICODE)),
     (
         "string",
@@ -202,7 +202,7 @@ def tokenize(
     last_token = None
 
     while pos < end:
-        for token_type, rule in rules:
+        for _token_type, rule in rules:
             match = rule.match(source, pos)
             if match is not None:
                 break
