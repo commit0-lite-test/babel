@@ -205,7 +205,28 @@ def parse_mapping(fileobj, filename=None):
                     text to parse
     :see: `extract_from_directory`
     """
-    pass
+    config = RawConfigParser()
+    config.read_file(fileobj)
+
+    method_map = []
+    options_map = {}
+
+    for section in config.sections():
+        if section == 'extractors':
+            continue
+        method, pattern = section.split(':', 1)
+        method = method.strip()
+        pattern = pattern.strip()
+        method_map.append((pattern, method))
+        options_map[pattern] = dict(config.items(section))
+
+    extractors = dict(config.items('extractors'))
+    for pattern, method in method_map:
+        if method in extractors:
+            method = extractors[method]
+        options_map[pattern]['_extractor'] = method
+
+    return method_map, options_map
 
 def parse_keywords(strings: Iterable[str]=()):
     """Parse keywords specifications from the given list of strings.
@@ -236,7 +257,48 @@ def parse_keywords(strings: Iterable[str]=()):
     messages. A ``None`` specification is equivalent to ``(1,)``, extracting the first
     argument.
     """
-    pass
+    def parse_spec(spec):
+        if not spec:
+            return None
+        result = []
+        for item in spec.split(','):
+            if item.endswith('c'):
+                result.append((int(item[:-1]), 'c'))
+            elif item.endswith('t'):
+                return int(item[:-1])
+            else:
+                result.append(int(item))
+        return tuple(result)
+
+    keywords = {}
+    for string in strings:
+        if ':' in string:
+            funcname, spec = string.split(':')
+        else:
+            funcname, spec = string, None
+        keywords[funcname] = parse_spec(spec)
+
+    # Handle polymorphic specifications
+    for funcname, spec in list(keywords.items()):
+        if isinstance(spec, int):
+            keywords[funcname] = {spec: (spec,)}
+        elif isinstance(spec, tuple) and any(isinstance(item, tuple) for item in spec):
+            polymorphic_spec = {}
+            for item in spec:
+                if isinstance(item, tuple):
+                    polymorphic_spec[item[0]] = (item,)
+                else:
+                    polymorphic_spec.setdefault(None, []).append(item)
+            if None in polymorphic_spec:
+                polymorphic_spec[None] = tuple(polymorphic_spec[None])
+            keywords[funcname] = polymorphic_spec
+
+    # Collapse single-spec dictionaries
+    for funcname, spec in list(keywords.items()):
+        if isinstance(spec, dict) and len(spec) == 1 and None in spec:
+            keywords[funcname] = spec[None]
+
+    return keywords
 
 def __getattr__(name: str):
     if name in {'check_message_extractors', 'compile_catalog', 'extract_messages', 'init_catalog', 'update_catalog'}:

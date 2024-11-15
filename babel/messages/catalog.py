@@ -541,7 +541,44 @@ class Catalog:
         :param template: the reference catalog, usually read from a POT file
         :param no_fuzzy_matching: whether to use fuzzy matching of message IDs
         """
-        pass
+        messages = self._messages
+        remaining = messages.copy()
+        self._messages = OrderedDict()
+
+        for message in template:
+            if message.id:
+                current = remaining.pop(self._key_for(message.id, message.context), None)
+                if current is None:
+                    if not no_fuzzy_matching:
+                        # Try to find a fuzzy match for the message
+                        fuzzy_matches = get_close_matches(self._to_fuzzy_match_key(message.id), 
+                                                          [self._to_fuzzy_match_key(key) for key in remaining.keys()], 
+                                                          n=1, cutoff=0.7)
+                        if fuzzy_matches:
+                            fuzzy_match_key = fuzzy_matches[0]
+                            current = remaining.pop(next(key for key in remaining.keys() 
+                                                         if self._to_fuzzy_match_key(key) == fuzzy_match_key))
+                            current.fuzzy = True
+                    if current is None:
+                        current = Message(message.id, message.string, message.locations,
+                                          message.flags, message.auto_comments,
+                                          message.user_comments, message.previous_id,
+                                          message.lineno, message.context)
+                else:
+                    current.locations = message.locations
+                    current.auto_comments = message.auto_comments
+                    if not keep_user_comments:
+                        current.user_comments = message.user_comments
+                self._messages[self._key_for(message.id, message.context)] = current
+
+        for msgid in remaining:
+            self.obsolete[msgid] = remaining[msgid]
+
+        if update_header_comment:
+            self.header_comment = template.header_comment
+
+        if update_creation_date:
+            self.creation_date = template.creation_date
 
     def _to_fuzzy_match_key(self, key: tuple[str, str] | str) -> str:
         """Converts a message key to a string suitable for fuzzy matching."""
