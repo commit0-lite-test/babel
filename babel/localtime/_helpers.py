@@ -1,11 +1,13 @@
+from typing import Optional
+import zoneinfo
+
 try:
-    import pytz
+    import pytz  # type: ignore
 except ModuleNotFoundError:
     pytz = None
-    import zoneinfo
 
 
-def _get_tzinfo(tzenv: str):
+def _get_tzinfo(tzenv: str) -> Optional[zoneinfo.ZoneInfo]:
     """Get the tzinfo from `zoneinfo` or `pytz`
 
     :param tzenv: timezone in the form of Continent/City
@@ -13,8 +15,8 @@ def _get_tzinfo(tzenv: str):
     """
     if pytz is not None:
         try:
-            return pytz.timezone(tzenv)
-        except pytz.exceptions.UnknownTimeZoneError:
+            return pytz.timezone(tzenv)  # type: ignore
+        except pytz.exceptions.UnknownTimeZoneError:  # type: ignore
             return None
     else:
         try:
