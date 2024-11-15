@@ -51,22 +51,24 @@ _fallback_tag = 'other'
     pass
 
 class PluralRule:
-    """Represents a set of language pluralization rules.  The constructor
-    accepts a list of (tag, expr) tuples or a dict of `CLDR rules`_. The
-    resulting object is callable and accepts one parameter with a positive or
-    negative number (both integer and float) for the number that indicates the
-    plural form for a string and returns the tag for the format:
+    """
+    Represents a set of language pluralization rules.
 
-    >>> rule = PluralRule({'one': 'n is 1'})
-    >>> rule(1)
-    'one'
-    >>> rule(2)
-    'other'
+    The constructor accepts a list of (tag, expr) tuples or a dict of `CLDR rules`_.
+    The resulting object is callable and accepts one parameter with a positive or
+    negative number (both integer and float) for the number that indicates the
+    plural form for a string and returns the tag for the format.
 
     Currently the CLDR defines these tags: zero, one, two, few, many and
-    other where other is an implicit default.  Rules should be mutually
-    exclusive; for a given numeric value, only one rule should apply (i.e.
-    the condition should only be true for one of the plural rule elements.
+    other where other is an implicit default. Rules should be mutually
+    exclusive; for a given numeric value, only one rule should apply.
+
+    Example:
+        >>> rule = PluralRule({'one': 'n is 1'})
+        >>> rule(1)
+        'one'
+        >>> rule(2)
+        'other'
 
     .. _`CLDR rules`: https://www.unicode.org/reports/tr35/tr35-33/tr35-numbers.html#Language_Plural_Rules
     """
@@ -101,11 +103,19 @@ class PluralRule:
 
     @classmethod
     def parse(cls, rules: Mapping[str, str] | Iterable[tuple[str, str]] | PluralRule) -> PluralRule:
-        """Create a `PluralRule` instance for the given rules.  If the rules
-        are a `PluralRule` object, that object is returned.
+        """
+        Create a `PluralRule` instance for the given rules.
 
-        :param rules: the rules as list or dict, or a `PluralRule` object
-        :raise RuleError: if the expression is malformed
+        If the rules are a `PluralRule` object, that object is returned.
+
+        Args:
+            rules: The rules as list or dict, or a `PluralRule` object
+
+        Raises:
+            RuleError: If the expression is malformed
+
+        Returns:
+            PluralRule: A new PluralRule instance
         """
         if isinstance(rules, PluralRule):
             return rules
@@ -123,9 +133,14 @@ class PluralRule:
 
     @property
     def tags(self) -> frozenset[str]:
-        """A set of explicitly defined tags in this rule.  The implicit default
-        ``'other'`` rules is not part of this set unless there is an explicit
-        rule for it.
+        """
+        A set of explicitly defined tags in this rule.
+
+        The implicit default ``'other'`` rule is not part of this set unless
+        there is an explicit rule for it.
+
+        Returns:
+            frozenset[str]: A set of tags
         """
         return frozenset(tag for tag, _ in self.abstract)
 
@@ -141,19 +156,29 @@ class PluralRule:
         return self._func(n)
 
 def to_javascript(rule: Mapping[str, str] | Iterable[tuple[str, str]] | PluralRule) -> str:
-    """Convert a list/dict of rules or a `PluralRule` object into a JavaScript
-    function.  This function depends on no external library:
+    """
+    Convert a list/dict of rules or a `PluralRule` object into a JavaScript function.
 
-    >>> to_javascript({'one': 'n is 1'})
-    "(function(n) { return (n == 1) ? 'one' : 'other'; })"
+    This function depends on no external library.
 
-    Implementation detail: The function generated will probably evaluate
-    expressions involved into range operations multiple times.  This has the
-    advantage that external helper functions are not required and is not a
-    big performance hit for these simple calculations.
+    Args:
+        rule: The rules as list or dict, or a `PluralRule` object
 
-    :param rule: the rules as list or dict, or a `PluralRule` object
-    :raise RuleError: if the expression is malformed
+    Raises:
+        RuleError: If the expression is malformed
+
+    Returns:
+        str: A JavaScript function as a string
+
+    Example:
+        >>> to_javascript({'one': 'n is 1'})
+        "(function(n) { return (n == 1) ? 'one' : 'other'; })"
+
+    Note:
+        The function generated will probably evaluate expressions involved in range
+        operations multiple times. This has the advantage that external helper
+        functions are not required and is not a big performance hit for these
+        simple calculations.
     """
     if not isinstance(rule, PluralRule):
         rule = PluralRule.parse(rule)
@@ -167,23 +192,32 @@ def to_javascript(rule: Mapping[str, str] | Iterable[tuple[str, str]] | PluralRu
     return f"(function(n) {{ return {' '.join(parts)}; }})"
 
 def to_python(rule: Mapping[str, str] | Iterable[tuple[str, str]] | PluralRule) -> Callable[[float | decimal.Decimal], str]:
-    """Convert a list/dict of rules or a `PluralRule` object into a regular
-    Python function.  This is useful in situations where you need a real
-    function and don't are about the actual rule object:
+    """
+    Convert a list/dict of rules or a `PluralRule` object into a regular Python function.
 
-    >>> func = to_python({'one': 'n is 1', 'few': 'n in 2..4'})
-    >>> func(1)
-    'one'
-    >>> func(3)
-    'few'
-    >>> func = to_python({'one': 'n in 1,11', 'few': 'n in 3..10,13..19'})
-    >>> func(11)
-    'one'
-    >>> func(15)
-    'few'
+    This is useful in situations where you need a real function and don't care about
+    the actual rule object.
 
-    :param rule: the rules as list or dict, or a `PluralRule` object
-    :raise RuleError: if the expression is malformed
+    Args:
+        rule: The rules as list or dict, or a `PluralRule` object
+
+    Raises:
+        RuleError: If the expression is malformed
+
+    Returns:
+        Callable[[float | decimal.Decimal], str]: A Python function
+
+    Examples:
+        >>> func = to_python({'one': 'n is 1', 'few': 'n in 2..4'})
+        >>> func(1)
+        'one'
+        >>> func(3)
+        'few'
+        >>> func = to_python({'one': 'n in 1,11', 'few': 'n in 3..10,13..19'})
+        >>> func(11)
+        'one'
+        >>> func(15)
+        'few'
     """
     if not isinstance(rule, PluralRule):
         rule = PluralRule.parse(rule)
@@ -201,14 +235,24 @@ def to_python(rule: Mapping[str, str] | Iterable[tuple[str, str]] | PluralRule) 
     return namespace['plural']
 
 def to_gettext(rule: Mapping[str, str] | Iterable[tuple[str, str]] | PluralRule) -> str:
-    """The plural rule as gettext expression.  The gettext expression is
-    technically limited to integers and returns indices rather than tags.
+    """
+    Convert the plural rule to a gettext expression.
 
-    >>> to_gettext({'one': 'n is 1', 'two': 'n is 2'})
-    'nplurals=3; plural=((n == 1) ? 0 : (n == 2) ? 1 : 2);'
+    The gettext expression is technically limited to integers and returns
+    indices rather than tags.
 
-    :param rule: the rules as list or dict, or a `PluralRule` object
-    :raise RuleError: if the expression is malformed
+    Args:
+        rule: The rules as list or dict, or a `PluralRule` object
+
+    Raises:
+        RuleError: If the expression is malformed
+
+    Returns:
+        str: A gettext expression
+
+    Example:
+        >>> to_gettext({'one': 'n is 1', 'two': 'n is 2'})
+        'nplurals=3; plural=((n == 1) ? 0 : (n == 2) ? 1 : 2);'
     """
     if not isinstance(rule, PluralRule):
         rule = PluralRule.parse(rule)
@@ -224,21 +268,31 @@ def to_gettext(rule: Mapping[str, str] | Iterable[tuple[str, str]] | PluralRule)
     return f"nplurals={len(rule.abstract) + 1}; plural=({plural_expr});"
 
 def in_range_list(num: float | decimal.Decimal, range_list: Iterable[Iterable[float | decimal.Decimal]]) -> bool:
-    """Integer range list test.  This is the callback for the "in" operator
-    of the UTS #35 pluralization rule language:
+    """
+    Integer range list test.
 
-    >>> in_range_list(1, [(1, 3)])
-    True
-    >>> in_range_list(3, [(1, 3)])
-    True
-    >>> in_range_list(3, [(1, 3), (5, 8)])
-    True
-    >>> in_range_list(1.2, [(1, 4)])
-    False
-    >>> in_range_list(10, [(1, 4)])
-    False
-    >>> in_range_list(10, [(1, 4), (6, 8)])
-    False
+    This is the callback for the "in" operator of the UTS #35 pluralization rule language.
+
+    Args:
+        num: The number to test
+        range_list: A list of ranges to test against
+
+    Returns:
+        bool: True if the number is in any of the ranges, False otherwise
+
+    Examples:
+        >>> in_range_list(1, [(1, 3)])
+        True
+        >>> in_range_list(3, [(1, 3)])
+        True
+        >>> in_range_list(3, [(1, 3), (5, 8)])
+        True
+        >>> in_range_list(1.2, [(1, 4)])
+        False
+        >>> in_range_list(10, [(1, 4)])
+        False
+        >>> in_range_list(10, [(1, 4), (6, 8)])
+        False
     """
     if isinstance(num, float):
         num = decimal.Decimal(str(num))
@@ -254,21 +308,31 @@ def in_range_list(num: float | decimal.Decimal, range_list: Iterable[Iterable[fl
     return False
 
 def within_range_list(num: float | decimal.Decimal, range_list: Iterable[Iterable[float | decimal.Decimal]]) -> bool:
-    """Float range test.  This is the callback for the "within" operator
-    of the UTS #35 pluralization rule language:
+    """
+    Float range test.
 
-    >>> within_range_list(1, [(1, 3)])
-    True
-    >>> within_range_list(1.0, [(1, 3)])
-    True
-    >>> within_range_list(1.2, [(1, 4)])
-    True
-    >>> within_range_list(8.8, [(1, 4), (7, 15)])
-    True
-    >>> within_range_list(10, [(1, 4)])
-    False
-    >>> within_range_list(10.5, [(1, 4), (20, 30)])
-    False
+    This is the callback for the "within" operator of the UTS #35 pluralization rule language.
+
+    Args:
+        num: The number to test
+        range_list: A list of ranges to test against
+
+    Returns:
+        bool: True if the number is within any of the ranges, False otherwise
+
+    Examples:
+        >>> within_range_list(1, [(1, 3)])
+        True
+        >>> within_range_list(1.0, [(1, 3)])
+        True
+        >>> within_range_list(1.2, [(1, 4)])
+        True
+        >>> within_range_list(8.8, [(1, 4), (7, 15)])
+        True
+        >>> within_range_list(10, [(1, 4)])
+        False
+        >>> within_range_list(10.5, [(1, 4), (20, 30)])
+        False
     """
     if isinstance(num, float):
         num = decimal.Decimal(str(num))
@@ -284,17 +348,28 @@ def within_range_list(num: float | decimal.Decimal, range_list: Iterable[Iterabl
     return False
 
 def cldr_modulo(a: float, b: float) -> float:
-    """Javaish modulo.  This modulo operator returns the value with the sign
-    of the dividend rather than the divisor like Python does:
-
-    >>> cldr_modulo(-3, 5)
-    -3
-    >>> cldr_modulo(-3, -5)
-    -3
-    >>> cldr_modulo(3, 5)
-    3
     """
-    pass
+    Javaish modulo.
+
+    This modulo operator returns the value with the sign of the dividend
+    rather than the divisor like Python does.
+
+    Args:
+        a: The dividend
+        b: The divisor
+
+    Returns:
+        float: The result of the modulo operation
+
+    Examples:
+        >>> cldr_modulo(-3, 5)
+        -3
+        >>> cldr_modulo(-3, -5)
+        -3
+        >>> cldr_modulo(3, 5)
+        3
+    """
+    return ((a % b) + b) % b if a < 0 else a % b
 
 class RuleError(Exception):
     """Raised if a rule is malformed."""
@@ -302,27 +377,31 @@ _VARS = {'n', 'i', 'v', 'w', 'f', 't', 'c', 'e'}
 _RULES: list[tuple[str | None, re.Pattern[str]]] = [(None, re.compile('\\s+', re.UNICODE)), ('word', re.compile(f'\\b(and|or|is|(?:with)?in|not|mod|[{''.join(_VARS)}])\\b')), ('value', re.compile('\\d+')), ('symbol', re.compile('%|,|!=|=')), ('ellipsis', re.compile('\\.{2,3}|\\u2026', re.UNICODE))]
 
 class _Parser:
-    """Internal parser.  This class can translate a single rule into an abstract
-    tree of tuples. It implements the following grammar::
+    """
+    Internal parser.
 
-        condition     = and_condition ('or' and_condition)*
-                        ('@integer' samples)?
-                        ('@decimal' samples)?
-        and_condition = relation ('and' relation)*
-        relation      = is_relation | in_relation | within_relation
-        is_relation   = expr 'is' ('not')? value
-        in_relation   = expr (('not')? 'in' | '=' | '!=') range_list
-        within_relation = expr ('not')? 'within' range_list
-        expr          = operand (('mod' | '%') value)?
-        operand       = 'n' | 'i' | 'f' | 't' | 'v' | 'w'
-        range_list    = (range | value) (',' range_list)*
-        value         = digit+
-        digit         = 0|1|2|3|4|5|6|7|8|9
-        range         = value'..'value
-        samples       = sampleRange (',' sampleRange)* (',' ('…'|'...'))?
-        sampleRange   = decimalValue '~' decimalValue
-        decimalValue  = value ('.' value)?
+    This class can translate a single rule into an abstract tree of tuples.
+    It implements the following grammar:
 
+    condition     = and_condition ('or' and_condition)*
+                    ('@integer' samples)?
+                    ('@decimal' samples)?
+    and_condition = relation ('and' relation)*
+    relation      = is_relation | in_relation | within_relation
+    is_relation   = expr 'is' ('not')? value
+    in_relation   = expr (('not')? 'in' | '=' | '!=') range_list
+    within_relation = expr ('not')? 'within' range_list
+    expr          = operand (('mod' | '%') value)?
+    operand       = 'n' | 'i' | 'f' | 't' | 'v' | 'w'
+    range_list    = (range | value) (',' range_list)*
+    value         = digit+
+    digit         = 0|1|2|3|4|5|6|7|8|9
+    range         = value'..'value
+    samples       = sampleRange (',' sampleRange)* (',' ('…'|'...'))?
+    sampleRange   = decimalValue '~' decimalValue
+    decimalValue  = value ('.' value)?
+
+    Notes:
     - Whitespace can occur between or around any of the above tokens.
     - Rules should be mutually exclusive; for a given numeric value, only one
       rule should apply (i.e. the condition should only be true for one of
