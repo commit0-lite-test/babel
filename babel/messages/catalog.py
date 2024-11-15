@@ -28,7 +28,6 @@ if TYPE_CHECKING:
 
     _MessageID: TypeAlias = str | tuple[str, ...] | list[str]
 
-from babel.messages import catalog_utils
 from babel.messages.catalog_utils import (
     _get_header_comment,
     _get_locale,
@@ -661,7 +660,10 @@ class Catalog:
                         # Try to find a fuzzy match for the message
                         fuzzy_matches = get_close_matches(
                             self._to_fuzzy_match_key(message.id),
-                            [self._to_fuzzy_match_key(str(key)) for key in remaining.keys()],
+                            [
+                                self._to_fuzzy_match_key(str(key))
+                                for key in remaining.keys()
+                            ],
                             n=1,
                             cutoff=0.7,
                         )
