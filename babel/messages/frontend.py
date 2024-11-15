@@ -66,7 +66,17 @@ def listify_value(arg, split=None):
     :param split: The argument to pass to `str.split()`.
     :return:
     """
-    pass
+    if isinstance(arg, str):
+        return [item.strip() for item in arg.split(split) if item.strip()]
+    
+    result = []
+    for item in arg:
+        if isinstance(item, list):
+            result.extend(listify_value(item, split))
+        elif item is not None:
+            result.extend(listify_value(str(item), split))
+    
+    return result
 
 class CommandMixin:
     as_args = None
@@ -94,7 +104,12 @@ def _make_directory_filter(ignore_patterns):
     """
     Build a directory_filter function based on a list of ignore patterns.
     """
-    pass
+    def directory_filter(dirname):
+        for pattern in ignore_patterns:
+            if fnmatch.fnmatch(dirname, pattern):
+                return False
+        return True
+    return directory_filter
 
 class ExtractMessages(CommandMixin):
     description = 'extract localizable strings from the project code'
