@@ -21,12 +21,23 @@ from typing import TYPE_CHECKING
 
 from babel.core import Locale
 from babel.messages.plurals import get_plural
-from babel.util import LOCALTZ, _cmp, distinct
+from babel.util import LOCALTZ, distinct
 
 if TYPE_CHECKING:
     from typing_extensions import TypeAlias
 
     _MessageID: TypeAlias = str | tuple[str, ...] | list[str]
+
+from babel.messages.catalog_utils import (
+    _get_locale,
+    _set_locale,
+    _get_locale_identifier,
+    _get_header_comment,
+    _set_header_comment,
+    _get_mime_headers,
+    _set_mime_headers,
+)
+
 __all__ = ["Message", "Catalog", "TranslationError"]
 
 
