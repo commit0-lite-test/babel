@@ -8,7 +8,6 @@ extend-exclude = [
 select = [
     "B",
     "C",
-    "COM",
     "E",
     "F",
     "I",
@@ -21,6 +20,7 @@ ignore = [
     "E731",  # Do not assign a lambda expression (we use them on purpose)
     "E741",  # Ambiguous variable name
     "UP012",  # "utf-8" is on purpose
+    "COM812",  # Trailing comma missing
 ]
 
 [tool.ruff.lint.per-file-ignores]
