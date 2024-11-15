@@ -37,9 +37,9 @@ def get_close_matches(word, possibilities, n=3, cutoff=0.6):
     around https://github.com/python/cpython/issues/90825.
     """
     if not n > 0:
-        raise ValueError("n must be > 0: %r" % (n,))
+        raise ValueError(f"n must be > 0: {n!r}")
     if not 0.0 <= cutoff <= 1.0:
-        raise ValueError("cutoff must be in [0.0, 1.0]: %r" % (cutoff,))
+        raise ValueError(f"cutoff must be in [0.0, 1.0]: {cutoff!r}")
     result = []
     s = SequenceMatcher(autojunk=False)
     s.set_seq2(word)
