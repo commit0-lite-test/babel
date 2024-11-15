@@ -56,7 +56,12 @@ def get_global(key: _GLOBAL_KEY) -> Mapping[str, Any]:
 
     :param key: the data key
     """
-    pass
+    global _global_data
+    if _global_data is None:
+        dirname = os.path.join(os.path.dirname(__file__), 'global.dat')
+        with open(dirname, 'rb') as f:
+            _global_data = pickle.load(f)
+    return _global_data[key]
 LOCALE_ALIASES = {'ar': 'ar_SY', 'bg': 'bg_BG', 'bs': 'bs_BA', 'ca': 'ca_ES', 'cs': 'cs_CZ', 'da': 'da_DK', 'de': 'de_DE', 'el': 'el_GR', 'en': 'en_US', 'es': 'es_ES', 'et': 'et_EE', 'fa': 'fa_IR', 'fi': 'fi_FI', 'fr': 'fr_FR', 'gl': 'gl_ES', 'he': 'he_IL', 'hu': 'hu_HU', 'id': 'id_ID', 'is': 'is_IS', 'it': 'it_IT', 'ja': 'ja_JP', 'km': 'km_KH', 'ko': 'ko_KR', 'lt': 'lt_LT', 'lv': 'lv_LV', 'mk': 'mk_MK', 'nl': 'nl_NL', 'nn': 'nn_NO', 'no': 'nb_NO', 'pl': 'pl_PL', 'pt': 'pt_PT', 'ro': 'ro_RO', 'ru': 'ru_RU', 'sk': 'sk_SK', 'sl': 'sl_SI', 'sv': 'sv_SE', 'th': 'th_TH', 'tr': 'tr_TR', 'uk': 'uk_UA'}
 
 class UnknownLocaleError(Exception):
@@ -152,7 +157,10 @@ class Locale:
         :param category: one of the ``LC_XXX`` environment variable names
         :param aliases: a dictionary of aliases for locale identifiers
         """
-        pass
+        locale_string = default_locale(category, aliases)
+        if locale_string:
+            return cls.parse(locale_string)
+        return cls('en', 'US')
 
     @classmethod
     def negotiate(cls, preferred: Iterable[str], available: Iterable[str], sep: str='_', aliases: Mapping[str, str]=LOCALE_ALIASES) -> Locale | None:
