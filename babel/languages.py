@@ -4,7 +4,9 @@ from babel.core import get_global
 
 
 def get_official_languages(
-    territory: str, regional: bool = False, de_facto: bool = False
+    territory: str,
+    regional: bool = False,
+    de_facto: bool = False,
 ) -> tuple[str, ...]:
     """
     Get the official language(s) for the given territory.
