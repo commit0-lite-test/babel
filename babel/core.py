@@ -1,26 +1,54 @@
 """
-    babel.core
-    ~~~~~~~~~~
+babel.core
+~~~~~~~~~~
 
-    Core locale representation and locale data access.
+Core locale representation and locale data access.
 
-    :copyright: (c) 2013-2023 by the Babel Team.
-    :license: BSD, see LICENSE for more details.
+:copyright: (c) 2013-2023 by the Babel Team.
+:license: BSD, see LICENSE for more details.
 """
+
 from __future__ import annotations
+
 import os
 import pickle
 from collections.abc import Iterable, Mapping
 from typing import TYPE_CHECKING, Any
+
 from babel import localedata
 from babel.plural import PluralRule
-__all__ = ['UnknownLocaleError', 'Locale', 'default_locale', 'negotiate_locale', 'parse_locale']
+
+__all__ = [
+    "UnknownLocaleError",
+    "Locale",
+    "default_locale",
+    "negotiate_locale",
+    "parse_locale",
+]
 if TYPE_CHECKING:
     from typing_extensions import Literal, TypeAlias
-    _GLOBAL_KEY: TypeAlias = Literal['all_currencies', 'currency_fractions', 'language_aliases', 'likely_subtags', 'meta_zones', 'parent_exceptions', 'script_aliases', 'territory_aliases', 'territory_currencies', 'territory_languages', 'territory_zones', 'variant_aliases', 'windows_zone_mapping', 'zone_aliases', 'zone_territories']
+
+    _GLOBAL_KEY: TypeAlias = Literal[
+        "all_currencies",
+        "currency_fractions",
+        "language_aliases",
+        "likely_subtags",
+        "meta_zones",
+        "parent_exceptions",
+        "script_aliases",
+        "territory_aliases",
+        "territory_currencies",
+        "territory_languages",
+        "territory_zones",
+        "variant_aliases",
+        "windows_zone_mapping",
+        "zone_aliases",
+        "zone_territories",
+    ]
     _global_data: Mapping[_GLOBAL_KEY, Mapping[str, Any]] | None
 _global_data = None
 _default_plural_rule = PluralRule({})
+
 
 def get_global(key: _GLOBAL_KEY) -> Mapping[str, Any]:
     """Return the dictionary for the given key in the global data.
@@ -58,11 +86,54 @@ def get_global(key: _GLOBAL_KEY) -> Mapping[str, Any]:
     """
     global _global_data
     if _global_data is None:
-        dirname = os.path.join(os.path.dirname(__file__), 'global.dat')
-        with open(dirname, 'rb') as f:
+        dirname = os.path.join(os.path.dirname(__file__), "global.dat")
+        with open(dirname, "rb") as f:
             _global_data = pickle.load(f)
     return _global_data[key]
-LOCALE_ALIASES = {'ar': 'ar_SY', 'bg': 'bg_BG', 'bs': 'bs_BA', 'ca': 'ca_ES', 'cs': 'cs_CZ', 'da': 'da_DK', 'de': 'de_DE', 'el': 'el_GR', 'en': 'en_US', 'es': 'es_ES', 'et': 'et_EE', 'fa': 'fa_IR', 'fi': 'fi_FI', 'fr': 'fr_FR', 'gl': 'gl_ES', 'he': 'he_IL', 'hu': 'hu_HU', 'id': 'id_ID', 'is': 'is_IS', 'it': 'it_IT', 'ja': 'ja_JP', 'km': 'km_KH', 'ko': 'ko_KR', 'lt': 'lt_LT', 'lv': 'lv_LV', 'mk': 'mk_MK', 'nl': 'nl_NL', 'nn': 'nn_NO', 'no': 'nb_NO', 'pl': 'pl_PL', 'pt': 'pt_PT', 'ro': 'ro_RO', 'ru': 'ru_RU', 'sk': 'sk_SK', 'sl': 'sl_SI', 'sv': 'sv_SE', 'th': 'th_TH', 'tr': 'tr_TR', 'uk': 'uk_UA'}
+
+
+LOCALE_ALIASES = {
+    "ar": "ar_SY",
+    "bg": "bg_BG",
+    "bs": "bs_BA",
+    "ca": "ca_ES",
+    "cs": "cs_CZ",
+    "da": "da_DK",
+    "de": "de_DE",
+    "el": "el_GR",
+    "en": "en_US",
+    "es": "es_ES",
+    "et": "et_EE",
+    "fa": "fa_IR",
+    "fi": "fi_FI",
+    "fr": "fr_FR",
+    "gl": "gl_ES",
+    "he": "he_IL",
+    "hu": "hu_HU",
+    "id": "id_ID",
+    "is": "is_IS",
+    "it": "it_IT",
+    "ja": "ja_JP",
+    "km": "km_KH",
+    "ko": "ko_KR",
+    "lt": "lt_LT",
+    "lv": "lv_LV",
+    "mk": "mk_MK",
+    "nl": "nl_NL",
+    "nn": "nn_NO",
+    "no": "nb_NO",
+    "pl": "pl_PL",
+    "pt": "pt_PT",
+    "ro": "ro_RO",
+    "ru": "ru_RU",
+    "sk": "sk_SK",
+    "sl": "sl_SI",
+    "sv": "sv_SE",
+    "th": "th_TH",
+    "tr": "tr_TR",
+    "uk": "uk_UA",
+}
+
 
 class UnknownLocaleError(Exception):
     """Exception thrown when a locale is requested for which no locale data
@@ -74,8 +145,9 @@ class UnknownLocaleError(Exception):
 
         :param identifier: the identifier string of the unsupported locale
         """
-        Exception.__init__(self, f'unknown locale {identifier!r}')
+        Exception.__init__(self, f"unknown locale {identifier!r}")
         self.identifier = identifier
+
 
 class Locale:
     """Representation of a specific locale.
@@ -109,7 +181,14 @@ class Locale:
     For more information see :rfc:`3066`.
     """
 
-    def __init__(self, language: str, territory: str | None=None, script: str | None=None, variant: str | None=None, modifier: str | None=None) -> None:
+    def __init__(
+        self,
+        language: str,
+        territory: str | None = None,
+        script: str | None = None,
+        variant: str | None = None,
+        modifier: str | None = None,
+    ) -> None:
         """Initialize the locale object from the given identifier components.
 
         >>> locale = Locale('en', 'US')
@@ -133,12 +212,14 @@ class Locale:
         self.modifier = modifier
         self.__data: localedata.LocaleDataDict | None = None
         identifier = str(self)
-        identifier_without_modifier = identifier.partition('@')[0]
+        identifier_without_modifier = identifier.partition("@")[0]
         if not localedata.exists(identifier_without_modifier):
             raise UnknownLocaleError(identifier)
 
     @classmethod
-    def default(cls, category: str | None=None, aliases: Mapping[str, str]=LOCALE_ALIASES) -> Locale:
+    def default(
+        cls, category: str | None = None, aliases: Mapping[str, str] = LOCALE_ALIASES
+    ) -> Locale:
         """Return the system default locale for the specified category.
 
         >>> for name in ['LANGUAGE', 'LC_ALL', 'LC_CTYPE', 'LC_MESSAGES']:
@@ -160,10 +241,16 @@ class Locale:
         locale_string = default_locale(category, aliases)
         if locale_string:
             return cls.parse(locale_string)
-        return cls('en', 'US')
+        return cls("en", "US")
 
     @classmethod
-    def negotiate(cls, preferred: Iterable[str], available: Iterable[str], sep: str='_', aliases: Mapping[str, str]=LOCALE_ALIASES) -> Locale | None:
+    def negotiate(
+        cls,
+        preferred: Iterable[str],
+        available: Iterable[str],
+        sep: str = "_",
+        aliases: Mapping[str, str] = LOCALE_ALIASES,
+    ) -> Locale | None:
         """Find the best match between available and requested locale strings.
 
         >>> Locale.negotiate(['de_DE', 'en_US'], ['de_DE', 'de_AT'])
@@ -189,7 +276,12 @@ class Locale:
         return None
 
     @classmethod
-    def parse(cls, identifier: str | Locale | None, sep: str='_', resolve_likely_subtags: bool=True) -> Locale:
+    def parse(
+        cls,
+        identifier: str | Locale | None,
+        sep: str = "_",
+        resolve_likely_subtags: bool = True,
+    ) -> Locale:
         """Create a `Locale` instance for the given locale identifier.
 
         >>> l = Locale.parse('de-DE', sep='-')
@@ -246,42 +338,52 @@ class Locale:
         if isinstance(identifier, Locale):
             return identifier
         if not isinstance(identifier, str):
-            raise TypeError('Locale identifier must be a string or Locale object')
-        
+            raise TypeError("Locale identifier must be a string or Locale object")
+
         parts = parse_locale(identifier, sep)
         lang, territory, script, variant, modifier = parts
-        
+
         if resolve_likely_subtags:
-            likely_subtags = get_global('likely_subtags')
+            likely_subtags = get_global("likely_subtags")
             if (lang, territory, script) in likely_subtags:
                 lang, territory, script = likely_subtags[(lang, territory, script)]
-        
+
         return cls(lang, territory, script, variant, modifier)
 
     def __eq__(self, other: object) -> bool:
-        for key in ('language', 'territory', 'script', 'variant', 'modifier'):
+        for key in ("language", "territory", "script", "variant", "modifier"):
             if not hasattr(other, key):
                 return False
-        return self.language == getattr(other, 'language') and self.territory == getattr(other, 'territory') and (self.script == getattr(other, 'script')) and (self.variant == getattr(other, 'variant')) and (self.modifier == getattr(other, 'modifier'))
+        return (
+            self.language == other.language
+            and self.territory == other.territory
+            and (self.script == other.script)
+            and (self.variant == other.variant)
+            and (self.modifier == other.modifier)
+        )
 
     def __ne__(self, other: object) -> bool:
         return not self.__eq__(other)
 
     def __hash__(self) -> int:
-        return hash((self.language, self.territory, self.script, self.variant, self.modifier))
+        return hash(
+            (self.language, self.territory, self.script, self.variant, self.modifier)
+        )
 
     def __repr__(self) -> str:
-        parameters = ['']
-        for key in ('territory', 'script', 'variant', 'modifier'):
+        parameters = [""]
+        for key in ("territory", "script", "variant", "modifier"):
             value = getattr(self, key)
             if value is not None:
-                parameters.append(f'{key}={value!r}')
+                parameters.append(f"{key}={value!r}")
         return f'Locale({self.language!r}{', '.join(parameters)})'
 
     def __str__(self) -> str:
-        return get_locale_identifier((self.language, self.territory, self.script, self.variant, self.modifier))
+        return get_locale_identifier(
+            (self.language, self.territory, self.script, self.variant, self.modifier)
+        )
 
-    def get_display_name(self, locale: Locale | str | None=None) -> str | None:
+    def get_display_name(self, locale: Locale | str | None = None) -> str | None:
         """Return the display name of the locale using the given locale.
 
         The display name will include the language, territory, script, and
@@ -303,7 +405,7 @@ class Locale:
             locale = Locale.parse(locale)
 
         locale_data = localedata.LocaleDataDict(self.languages)
-        
+
         parts = []
         if self.language:
             parts.append(locale_data.get(self.language, self.language))
@@ -316,10 +418,14 @@ class Locale:
         if self.modifier:
             parts.append(f"({self.modifier})")
 
-        return ' '.join(parts)
-    display_name = property(get_display_name, doc="        The localized display name of the locale.\n\n        >>> Locale('en').display_name\n        u'English'\n        >>> Locale('en', 'US').display_name\n        u'English (United States)'\n        >>> Locale('sv').display_name\n        u'svenska'\n\n        :type: `unicode`\n        ")
+        return " ".join(parts)
 
-    def get_language_name(self, locale: Locale | str | None=None) -> str | None:
+    display_name = property(
+        get_display_name,
+        doc="        The localized display name of the locale.\n\n        >>> Locale('en').display_name\n        u'English'\n        >>> Locale('en', 'US').display_name\n        u'English (United States)'\n        >>> Locale('sv').display_name\n        u'svenska'\n\n        :type: `unicode`\n        ",
+    )
+
+    def get_language_name(self, locale: Locale | str | None = None) -> str | None:
         """Return the language of this locale in the given locale.
 
         >>> Locale('zh', 'CN', script='Hans').get_language_name('de')
@@ -336,9 +442,13 @@ class Locale:
 
         locale_data = localedata.LocaleDataDict(locale.languages)
         return locale_data.get(self.language)
-    language_name = property(get_language_name, doc="        The localized language name of the locale.\n\n        >>> Locale('en', 'US').language_name\n        u'English'\n    ")
 
-    def get_territory_name(self, locale: Locale | str | None=None) -> str | None:
+    language_name = property(
+        get_language_name,
+        doc="        The localized language name of the locale.\n\n        >>> Locale('en', 'US').language_name\n        u'English'\n    ",
+    )
+
+    def get_territory_name(self, locale: Locale | str | None = None) -> str | None:
         """Return the territory name in the given locale."""
         if locale is None:
             locale = self
@@ -350,9 +460,13 @@ class Locale:
 
         locale_data = localedata.LocaleDataDict(locale.territories)
         return locale_data.get(self.territory)
-    territory_name = property(get_territory_name, doc="        The localized territory name of the locale if available.\n\n        >>> Locale('de', 'DE').territory_name\n        u'Deutschland'\n    ")
 
-    def get_script_name(self, locale: Locale | str | None=None) -> str | None:
+    territory_name = property(
+        get_territory_name,
+        doc="        The localized territory name of the locale if available.\n\n        >>> Locale('de', 'DE').territory_name\n        u'Deutschland'\n    ",
+    )
+
+    def get_script_name(self, locale: Locale | str | None = None) -> str | None:
         """Return the script name in the given locale."""
         if locale is None:
             locale = self
@@ -364,7 +478,11 @@ class Locale:
 
         locale_data = localedata.LocaleDataDict(locale.scripts)
         return locale_data.get(self.script)
-    script_name = property(get_script_name, doc="        The localized script name of the locale if available.\n\n        >>> Locale('sr', 'ME', script='Latn').script_name\n        u'latinica'\n    ")
+
+    script_name = property(
+        get_script_name,
+        doc="        The localized script name of the locale if available.\n\n        >>> Locale('sr', 'ME', script='Latn').script_name\n        u'latinica'\n    ",
+    )
 
     @property
     def english_name(self) -> str | None:
@@ -376,7 +494,7 @@ class Locale:
         u'German (Germany)'
 
         :type: `unicode`"""
-        return self.get_display_name(Locale('en'))
+        return self.get_display_name(Locale("en"))
 
     @property
     def languages(self) -> localedata.LocaleDataDict:
@@ -388,7 +506,7 @@ class Locale:
         See `ISO 639 <http://www.loc.gov/standards/iso639-2/>`_ for
         more information.
         """
-        return localedata.LocaleDataDict(self.__data['languages'])
+        return localedata.LocaleDataDict(self.__data["languages"])
 
     @property
     def scripts(self) -> localedata.LocaleDataDict:
@@ -400,7 +518,7 @@ class Locale:
         See `ISO 15924 <http://www.evertype.com/standards/iso15924/>`_
         for more information.
         """
-        return localedata.LocaleDataDict(self.__data['scripts'])
+        return localedata.LocaleDataDict(self.__data["scripts"])
 
     @property
     def territories(self) -> localedata.LocaleDataDict:
@@ -412,7 +530,7 @@ class Locale:
         See `ISO 3166 <http://www.iso.org/iso/en/prods-services/iso3166ma/>`_
         for more information.
         """
-        return localedata.LocaleDataDict(self.__data['territories'])
+        return localedata.LocaleDataDict(self.__data["territories"])
 
     @property
     def variants(self) -> localedata.LocaleDataDict:
@@ -421,7 +539,7 @@ class Locale:
         >>> Locale('de', 'DE').variants['1901']
         u'Alte deutsche Rechtschreibung'
         """
-        return localedata.LocaleDataDict(self.__data['variants'])
+        return localedata.LocaleDataDict(self.__data["variants"])
 
     @property
     def currencies(self) -> localedata.LocaleDataDict:
@@ -435,7 +553,7 @@ class Locale:
         >>> Locale('de', 'DE').currencies['COP']
         u'Kolumbianischer Peso'
         """
-        return localedata.LocaleDataDict(self.__data['currencies'])
+        return localedata.LocaleDataDict(self.__data["currencies"])
 
     @property
     def currency_symbols(self) -> localedata.LocaleDataDict:
@@ -446,7 +564,7 @@ class Locale:
         >>> Locale('es', 'CO').currency_symbols['USD']
         u'US$'
         """
-        return localedata.LocaleDataDict(self.__data['currency_symbols'])
+        return localedata.LocaleDataDict(self.__data["currency_symbols"])
 
     @property
     def number_symbols(self) -> localedata.LocaleDataDict:
@@ -462,7 +580,7 @@ class Locale:
         >>> Locale('fa', 'IR').number_symbols["latn"]['decimal']
         u'.'
         """
-        return localedata.LocaleDataDict(self.__data['number_symbols'])
+        return localedata.LocaleDataDict(self.__data["number_symbols"])
 
     @property
     def other_numbering_systems(self) -> localedata.LocaleDataDict:
@@ -476,7 +594,7 @@ class Locale:
         .. note:: The format of the value returned may change between
                   Babel versions.
         """
-        return localedata.LocaleDataDict(self.__data['other_numbering_systems'])
+        return localedata.LocaleDataDict(self.__data["other_numbering_systems"])
 
     @property
     def default_numbering_system(self) -> str:
@@ -484,7 +602,7 @@ class Locale:
         >>> Locale('el', 'GR').default_numbering_system
         u'latn'
         """
-        return self.__data['default_numbering_system']
+        return self.__data["default_numbering_system"]
 
     @property
     def decimal_formats(self) -> localedata.LocaleDataDict:
@@ -496,7 +614,7 @@ class Locale:
         >>> Locale('en', 'US').decimal_formats[None]
         <NumberPattern u'#,##0.###'>
         """
-        return localedata.LocaleDataDict(self.__data['decimal_formats'])
+        return localedata.LocaleDataDict(self.__data["decimal_formats"])
 
     @property
     def compact_decimal_formats(self) -> localedata.LocaleDataDict:
@@ -508,7 +626,7 @@ class Locale:
         >>> Locale('en', 'US').compact_decimal_formats["short"]["one"]["1000"]
         <NumberPattern u'0K'>
         """
-        return localedata.LocaleDataDict(self.__data['compact_decimal_formats'])
+        return localedata.LocaleDataDict(self.__data["compact_decimal_formats"])
 
     @property
     def currency_formats(self) -> localedata.LocaleDataDict:
@@ -522,7 +640,7 @@ class Locale:
         >>> Locale('en', 'US').currency_formats['accounting']
         <NumberPattern u'\\xa4#,##0.00;(\\xa4#,##0.00)'>
         """
-        return localedata.LocaleDataDict(self.__data['currency_formats'])
+        return localedata.LocaleDataDict(self.__data["currency_formats"])
 
     @property
     def compact_currency_formats(self) -> localedata.LocaleDataDict:
@@ -534,7 +652,7 @@ class Locale:
         >>> Locale('en', 'US').compact_currency_formats["short"]["one"]["1000"]
         <NumberPattern u'¤0K'>
         """
-        return localedata.LocaleDataDict(self.__data['compact_currency_formats'])
+        return localedata.LocaleDataDict(self.__data["compact_currency_formats"])
 
     @property
     def percent_formats(self) -> localedata.LocaleDataDict:
@@ -546,7 +664,7 @@ class Locale:
         >>> Locale('en', 'US').percent_formats[None]
         <NumberPattern u'#,##0%'>
         """
-        return localedata.LocaleDataDict(self.__data['percent_formats'])
+        return localedata.LocaleDataDict(self.__data["percent_formats"])
 
     @property
     def scientific_formats(self) -> localedata.LocaleDataDict:
@@ -558,7 +676,7 @@ class Locale:
         >>> Locale('en', 'US').scientific_formats[None]
         <NumberPattern u'#E0'>
         """
-        return localedata.LocaleDataDict(self.__data['scientific_formats'])
+        return localedata.LocaleDataDict(self.__data["scientific_formats"])
 
     @property
     def periods(self) -> localedata.LocaleDataDict:
@@ -567,7 +685,7 @@ class Locale:
         >>> Locale('en', 'US').periods['am']
         u'AM'
         """
-        return localedata.LocaleDataDict(self.__data['periods'])
+        return localedata.LocaleDataDict(self.__data["periods"])
 
     @property
     def day_periods(self) -> localedata.LocaleDataDict:
@@ -575,13 +693,12 @@ class Locale:
 
         These are not meant to be used without the relevant `day_period_rules`.
         """
-        return localedata.LocaleDataDict(self.__data['day_periods'])
+        return localedata.LocaleDataDict(self.__data["day_periods"])
 
     @property
     def day_period_rules(self) -> localedata.LocaleDataDict:
-        """Day period rules for the locale.  Used by `get_period_id`.
-        """
-        return localedata.LocaleDataDict(self.__data['day_period_rules'])
+        """Day period rules for the locale.  Used by `get_period_id`."""
+        return localedata.LocaleDataDict(self.__data["day_period_rules"])
 
     @property
     def days(self) -> localedata.LocaleDataDict:
@@ -590,7 +707,7 @@ class Locale:
         >>> Locale('de', 'DE').days['format']['wide'][3]
         u'Donnerstag'
         """
-        return localedata.LocaleDataDict(self.__data['days'])
+        return localedata.LocaleDataDict(self.__data["days"])
 
     @property
     def months(self) -> localedata.LocaleDataDict:
@@ -599,7 +716,7 @@ class Locale:
         >>> Locale('de', 'DE').months['format']['wide'][10]
         u'Oktober'
         """
-        return localedata.LocaleDataDict(self.__data['months'])
+        return localedata.LocaleDataDict(self.__data["months"])
 
     @property
     def quarters(self) -> localedata.LocaleDataDict:
@@ -608,7 +725,7 @@ class Locale:
         >>> Locale('de', 'DE').quarters['format']['wide'][1]
         u'1. Quartal'
         """
-        return localedata.LocaleDataDict(self.__data['quarters'])
+        return localedata.LocaleDataDict(self.__data["quarters"])
 
     @property
     def eras(self) -> localedata.LocaleDataDict:
@@ -622,7 +739,7 @@ class Locale:
         >>> Locale('en', 'US').eras['abbreviated'][0]
         u'BC'
         """
-        return localedata.LocaleDataDict(self.__data['eras'])
+        return localedata.LocaleDataDict(self.__data["eras"])
 
     @property
     def time_zones(self) -> localedata.LocaleDataDict:
@@ -653,7 +770,7 @@ class Locale:
 
         .. versionadded:: 0.9
         """
-        return localedata.LocaleDataDict(self.__data['meta_zones'])
+        return localedata.LocaleDataDict(self.__data["meta_zones"])
 
     @property
     def zone_formats(self) -> localedata.LocaleDataDict:
@@ -669,7 +786,7 @@ class Locale:
 
         .. versionadded:: 0.9
         """
-        return localedata.LocaleDataDict(self.__data['zone_formats'])
+        return localedata.LocaleDataDict(self.__data["zone_formats"])
 
     @property
     def first_week_day(self) -> int:
@@ -680,7 +797,7 @@ class Locale:
         >>> Locale('en', 'US').first_week_day
         6
         """
-        return self.__data['week_data']['first_day']
+        return self.__data["week_data"]["first_day"]
 
     @property
     def weekend_start(self) -> int:
@@ -689,7 +806,7 @@ class Locale:
         >>> Locale('de', 'DE').weekend_start
         5
         """
-        return self.__data['week_data']['weekend_start']
+        return self.__data["week_data"]["weekend_start"]
 
     @property
     def weekend_end(self) -> int:
@@ -698,7 +815,7 @@ class Locale:
         >>> Locale('de', 'DE').weekend_end
         6
         """
-        return self.__data['week_data']['weekend_end']
+        return self.__data["week_data"]["weekend_end"]
 
     @property
     def min_week_days(self) -> int:
@@ -708,7 +825,7 @@ class Locale:
         >>> Locale('de', 'DE').min_week_days
         4
         """
-        return self.__data['week_data']['min_days']
+        return self.__data["week_data"]["min_days"]
 
     @property
     def date_formats(self) -> localedata.LocaleDataDict:
@@ -722,7 +839,7 @@ class Locale:
         >>> Locale('fr', 'FR').date_formats['long']
         <DateTimePattern u'd MMMM y'>
         """
-        return localedata.LocaleDataDict(self.__data['date_formats'])
+        return localedata.LocaleDataDict(self.__data["date_formats"])
 
     @property
     def time_formats(self) -> localedata.LocaleDataDict:
@@ -736,7 +853,7 @@ class Locale:
         >>> Locale('fr', 'FR').time_formats['long']
         <DateTimePattern u'HH:mm:ss z'>
         """
-        return localedata.LocaleDataDict(self.__data['time_formats'])
+        return localedata.LocaleDataDict(self.__data["time_formats"])
 
     @property
     def datetime_formats(self) -> localedata.LocaleDataDict:
@@ -750,7 +867,7 @@ class Locale:
         >>> Locale('th').datetime_formats['medium']
         u'{1} {0}'
         """
-        return localedata.LocaleDataDict(self.__data['datetime_formats'])
+        return localedata.LocaleDataDict(self.__data["datetime_formats"])
 
     @property
     def datetime_skeletons(self) -> localedata.LocaleDataDict:
@@ -763,7 +880,7 @@ class Locale:
         >>> Locale('fr').datetime_skeletons['H']
         <DateTimePattern u"HH 'h'">
         """
-        return localedata.LocaleDataDict(self.__data['datetime_skeletons'])
+        return localedata.LocaleDataDict(self.__data["datetime_skeletons"])
 
     @property
     def interval_formats(self) -> localedata.LocaleDataDict:
@@ -785,7 +902,7 @@ class Locale:
 
         :rtype: dict[str, dict[str, list[str]]]
         """
-        return localedata.LocaleDataDict(self.__data['interval_formats'])
+        return localedata.LocaleDataDict(self.__data["interval_formats"])
 
     @property
     def plural_form(self) -> PluralRule:
@@ -800,7 +917,7 @@ class Locale:
         >>> Locale('ru').plural_form(100)
         'many'
         """
-        return self.__data['plural_form']
+        return self.__data["plural_form"]
 
     @property
     def list_patterns(self) -> localedata.LocaleDataDict:
@@ -816,7 +933,7 @@ class Locale:
         >>> Locale('en_GB').list_patterns['standard']['end']
         u'{0} and {1}'
         """
-        return localedata.LocaleDataDict(self.__data['list_patterns'])
+        return localedata.LocaleDataDict(self.__data["list_patterns"])
 
     @property
     def ordinal_form(self) -> PluralRule:
@@ -833,7 +950,7 @@ class Locale:
         >>> Locale('ru').ordinal_form(100)
         'other'
         """
-        return self.__data['ordinal_form']
+        return self.__data["ordinal_form"]
 
     @property
     def measurement_systems(self) -> localedata.LocaleDataDict:
@@ -845,7 +962,7 @@ class Locale:
         u'US'
 
         """
-        return localedata.LocaleDataDict(self.__data['measurement_systems'])
+        return localedata.LocaleDataDict(self.__data["measurement_systems"])
 
     @property
     def character_order(self) -> str:
@@ -856,7 +973,7 @@ class Locale:
         >>> Locale('ar', 'SA').character_order
         'right-to-left'
         """
-        return self.__data['character_order']
+        return self.__data["character_order"]
 
     @property
     def text_direction(self) -> str:
@@ -867,7 +984,7 @@ class Locale:
         >>> Locale('ar', 'SA').text_direction
         'rtl'
         """
-        return 'rtl' if self.character_order == 'right-to-left' else 'ltr'
+        return "rtl" if self.character_order == "right-to-left" else "ltr"
 
     @property
     def unit_display_names(self) -> localedata.LocaleDataDict:
@@ -881,9 +998,12 @@ class Locale:
                   Babel versions.
 
         """
-        return localedata.LocaleDataDict(self.__data['unit_display_names'])
+        return localedata.LocaleDataDict(self.__data["unit_display_names"])
 
-def default_locale(category: str | None=None, aliases: Mapping[str, str]=LOCALE_ALIASES) -> str | None:
+
+def default_locale(
+    category: str | None = None, aliases: Mapping[str, str] = LOCALE_ALIASES
+) -> str | None:
     """Returns the system default locale for a given category, based on
     environment variables.
 
@@ -910,20 +1030,26 @@ def default_locale(category: str | None=None, aliases: Mapping[str, str]=LOCALE_
     :param category: one of the ``LC_XXX`` environment variable names
     :param aliases: a dictionary of aliases for locale identifiers
     """
-    varnames = (category, 'LANGUAGE', 'LC_ALL', 'LC_CTYPE', 'LANG')
+    varnames = (category, "LANGUAGE", "LC_ALL", "LC_CTYPE", "LANG")
     for name in varnames:
         if name:
             locale = os.environ.get(name)
             if locale:
-                if name == 'LANGUAGE' and ':' in locale:
+                if name == "LANGUAGE" and ":" in locale:
                     # Language priority list
-                    locale = locale.split(':')[0]
-                if locale.lower() in ('c', 'posix'):
-                    return 'en_US_POSIX'
-                return aliases.get(locale, locale).replace('-', '_')
+                    locale = locale.split(":")[0]
+                if locale.lower() in ("c", "posix"):
+                    return "en_US_POSIX"
+                return aliases.get(locale, locale).replace("-", "_")
     return None
 
-def negotiate_locale(preferred: Iterable[str], available: Iterable[str], sep: str='_', aliases: Mapping[str, str]=LOCALE_ALIASES) -> str | None:
+
+def negotiate_locale(
+    preferred: Iterable[str],
+    available: Iterable[str],
+    sep: str = "_",
+    aliases: Mapping[str, str] = LOCALE_ALIASES,
+) -> str | None:
     """Find the best match between available and requested locale strings.
 
     >>> negotiate_locale(['de_DE', 'en_US'], ['de_DE', 'de_AT'])
@@ -971,7 +1097,7 @@ def negotiate_locale(preferred: Iterable[str], available: Iterable[str], sep: st
     """
     available = [a.lower() for a in available]
     for locale in preferred:
-        locale = locale.replace('-', '_')
+        locale = locale.replace("-", "_")
         if aliases:
             locale = aliases.get(locale, locale)
         parts = locale.split(sep)
@@ -986,7 +1112,13 @@ def negotiate_locale(preferred: Iterable[str], available: Iterable[str], sep: st
                 return candidate
     return None
 
-def parse_locale(identifier: str, sep: str='_') -> tuple[str, str | None, str | None, str | None] | tuple[str, str | None, str | None, str | None, str | None]:
+
+def parse_locale(
+    identifier: str, sep: str = "_"
+) -> (
+    tuple[str, str | None, str | None, str | None]
+    | tuple[str, str | None, str | None, str | None, str | None]
+):
     """Parse a locale identifier into a tuple of the form ``(language,
     territory, script, variant, modifier)``.
 
@@ -1047,13 +1179,13 @@ def parse_locale(identifier: str, sep: str='_') -> tuple[str, str | None, str | 
         parts = [identifier]
 
     # Remove encoding if present
-    if '.' in parts[-1]:
-        parts[-1] = parts[-1].split('.')[0]
+    if "." in parts[-1]:
+        parts[-1] = parts[-1].split(".")[0]
 
     # Extract modifier
     modifier = None
-    if '@' in parts[-1]:
-        parts[-1], modifier = parts[-1].split('@', 1)
+    if "@" in parts[-1]:
+        parts[-1], modifier = parts[-1].split("@", 1)
 
     # Normalize case
     parts = [part.lower() for part in parts]
@@ -1071,7 +1203,15 @@ def parse_locale(identifier: str, sep: str='_') -> tuple[str, str | None, str | 
     else:
         raise ValueError(f"'{identifier}' is not a valid locale identifier")
 
-def get_locale_identifier(tup: tuple[str] | tuple[str, str | None] | tuple[str, str | None, str | None] | tuple[str, str | None, str | None, str | None] | tuple[str, str | None, str | None, str | None, str | None], sep: str='_') -> str:
+
+def get_locale_identifier(
+    tup: tuple[str]
+    | tuple[str, str | None]
+    | tuple[str, str | None, str | None]
+    | tuple[str, str | None, str | None, str | None]
+    | tuple[str, str | None, str | None, str | None, str | None],
+    sep: str = "_",
+) -> str:
     """The reverse of :func:`parse_locale`.  It creates a locale identifier out
     of a ``(language, territory, script, variant, modifier)`` tuple.  Items can be set to
     ``None`` and trailing ``None``\\s can also be left out of the tuple.
@@ -1093,10 +1233,10 @@ def get_locale_identifier(tup: tuple[str] | tuple[str, str | None] | tuple[str, 
             parts.append(part)
         else:
             break
-    
+
     identifier = sep.join(parts[:-1]) if len(parts) > 1 else parts[0]
-    
+
     if len(tup) == 5 and tup[4]:
-        identifier += f'@{tup[4]}'
-    
+        identifier += f"@{tup[4]}"
+
     return identifier
