@@ -29,12 +29,12 @@ if TYPE_CHECKING:
     _MessageID: TypeAlias = str | tuple[str, ...] | list[str]
 
 from babel.messages.catalog_utils import (
-    _get_locale,
-    _set_locale,
-    _get_locale_identifier,
     _get_header_comment,
-    _set_header_comment,
+    _get_locale,
+    _get_locale_identifier,
     _get_mime_headers,
+    _set_header_comment,
+    _set_locale,
     _set_mime_headers,
 )
 
