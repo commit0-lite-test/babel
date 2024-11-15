@@ -1,7 +1,11 @@
 from __future__ import annotations
+
 from babel.core import get_global
 
-def get_official_languages(territory: str, regional: bool=False, de_facto: bool=False) -> tuple[str, ...]:
+
+def get_official_languages(
+    territory: str, regional: bool = False, de_facto: bool = False
+) -> tuple[str, ...]:
     """
     Get the official language(s) for the given territory.
 
@@ -23,22 +27,29 @@ def get_official_languages(territory: str, regional: bool=False, de_facto: bool=
     :return: Tuple of language codes
     :rtype: tuple[str]
     """
-    territory_data = get_global('territory_languages').get(territory, {})
+    territory_data = get_global("territory_languages").get(territory, {})
     official_languages = []
-    
+
     for lang, data in territory_data.items():
-        status = data.get('official_status')
-        if status == 'official' or \
-           (regional and status == 'official_regional') or \
-           (de_facto and status == 'de_facto_official'):
+        status = data.get("official_status")
+        if (
+            status == "official"
+            or (regional and status == "official_regional")
+            or (de_facto and status == "de_facto_official")
+        ):
             official_languages.append(lang)
-    
+
     # Sort languages by population percentage (descending order)
-    official_languages.sort(key=lambda x: territory_data[x].get('population_percent', 0), reverse=True)
-    
+    official_languages.sort(
+        key=lambda x: territory_data[x].get("population_percent", 0), reverse=True
+    )
+
     return tuple(official_languages)
 
-def get_territory_language_info(territory: str) -> dict[str, dict[str, float | str | None]]:
+
+def get_territory_language_info(
+    territory: str,
+) -> dict[str, dict[str, float | str | None]]:
     """
     Get a dictionary of language information for a territory.
 
@@ -63,14 +74,14 @@ def get_territory_language_info(territory: str) -> dict[str, dict[str, float | s
     :return: Language information dictionary
     :rtype: dict[str, dict]
     """
-    territory_data = get_global('territory_languages').get(territory, {})
+    territory_data = get_global("territory_languages").get(territory, {})
     result = {}
-    
+
     for lang, data in territory_data.items():
         lang_info = {
-            'population_percent': data.get('population_percent'),
-            'official_status': data.get('official_status')
+            "population_percent": data.get("population_percent"),
+            "official_status": data.get("official_status"),
         }
         result[lang] = lang_info
-    
+
     return result
