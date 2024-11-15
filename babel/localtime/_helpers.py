@@ -10,4 +10,13 @@ def _get_tzinfo(tzenv: str):
     :param tzenv: timezone in the form of Continent/City
     :return: tzinfo object or None if not found
     """
-    pass
+    if pytz is not None:
+        try:
+            return pytz.timezone(tzenv)
+        except pytz.exceptions.UnknownTimeZoneError:
+            return None
+    else:
+        try:
+            return zoneinfo.ZoneInfo(tzenv)
+        except zoneinfo.ZoneInfoNotFoundError:
+            return None
