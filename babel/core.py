@@ -243,7 +243,20 @@ class Locale:
                                      requested locale
         :raise `TypeError`: if the identifier is not a string or a `Locale`
         """
-        pass
+        if isinstance(identifier, Locale):
+            return identifier
+        if not isinstance(identifier, str):
+            raise TypeError('Locale identifier must be a string or Locale object')
+        
+        parts = parse_locale(identifier, sep)
+        lang, territory, script, variant, modifier = parts
+        
+        if resolve_likely_subtags:
+            likely_subtags = get_global('likely_subtags')
+            if (lang, territory, script) in likely_subtags:
+                lang, territory, script = likely_subtags[(lang, territory, script)]
+        
+        return cls(lang, territory, script, variant, modifier)
 
     def __eq__(self, other: object) -> bool:
         for key in ('language', 'territory', 'script', 'variant', 'modifier'):
@@ -284,7 +297,26 @@ class Locale:
 
         :param locale: the locale to use
         """
-        pass
+        if locale is None:
+            locale = self
+        elif isinstance(locale, str):
+            locale = Locale.parse(locale)
+
+        locale_data = localedata.LocaleDataDict(self.languages)
+        
+        parts = []
+        if self.language:
+            parts.append(locale_data.get(self.language, self.language))
+        if self.script:
+            parts.append(f"({self.get_script_name(locale)})")
+        if self.territory:
+            parts.append(f"({self.get_territory_name(locale)})")
+        if self.variant:
+            parts.append(f"({self.variant})")
+        if self.modifier:
+            parts.append(f"({self.modifier})")
+
+        return ' '.join(parts)
     display_name = property(get_display_name, doc="        The localized display name of the locale.\n\n        >>> Locale('en').display_name\n        u'English'\n        >>> Locale('en', 'US').display_name\n        u'English (United States)'\n        >>> Locale('sv').display_name\n        u'svenska'\n\n        :type: `unicode`\n        ")
 
     def get_language_name(self, locale: Locale | str | None=None) -> str | None:
@@ -297,17 +329,41 @@ class Locale:
 
         :param locale: the locale to use
         """
-        pass
+        if locale is None:
+            locale = self
+        elif isinstance(locale, str):
+            locale = Locale.parse(locale)
+
+        locale_data = localedata.LocaleDataDict(locale.languages)
+        return locale_data.get(self.language)
     language_name = property(get_language_name, doc="        The localized language name of the locale.\n\n        >>> Locale('en', 'US').language_name\n        u'English'\n    ")
 
     def get_territory_name(self, locale: Locale | str | None=None) -> str | None:
         """Return the territory name in the given locale."""
-        pass
+        if locale is None:
+            locale = self
+        elif isinstance(locale, str):
+            locale = Locale.parse(locale)
+
+        if self.territory is None:
+            return None
+
+        locale_data = localedata.LocaleDataDict(locale.territories)
+        return locale_data.get(self.territory)
     territory_name = property(get_territory_name, doc="        The localized territory name of the locale if available.\n\n        >>> Locale('de', 'DE').territory_name\n        u'Deutschland'\n    ")
 
     def get_script_name(self, locale: Locale | str | None=None) -> str | None:
         """Return the script name in the given locale."""
-        pass
+        if locale is None:
+            locale = self
+        elif isinstance(locale, str):
+            locale = Locale.parse(locale)
+
+        if self.script is None:
+            return None
+
+        locale_data = localedata.LocaleDataDict(locale.scripts)
+        return locale_data.get(self.script)
     script_name = property(get_script_name, doc="        The localized script name of the locale if available.\n\n        >>> Locale('sr', 'ME', script='Latn').script_name\n        u'latinica'\n    ")
 
     @property
@@ -320,7 +376,7 @@ class Locale:
         u'German (Germany)'
 
         :type: `unicode`"""
-        pass
+        return self.get_display_name(Locale('en'))
 
     @property
     def languages(self) -> localedata.LocaleDataDict:
