@@ -22,7 +22,6 @@ from typing import TYPE_CHECKING
 from babel.core import Locale
 from babel.messages.plurals import get_plural
 from babel.util import LOCALTZ, distinct
-from email import message_from_string
 
 if TYPE_CHECKING:
     from typing import TypeAlias
