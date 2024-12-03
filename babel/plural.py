@@ -489,3 +489,13 @@ class _UnicodeCompiler(_Compiler):
     t      visible fractional digits in n, without trailing zeros.
     c      compact decimal exponent value: exponent of the power of 10 used in compact decimal formatting.
     e      currently, synonym for 'c'. however, may be redefined in the future.
+    Symbol Value
+    ------ ---------------------------------------------------------------
+    n      absolute value of the source number (integer and decimals).
+    i      integer digits of n.
+    v      number of visible fraction digits in n, with trailing zeros.
+    w      number of visible fraction digits in n, without trailing zeros.
+    f      visible fractional digits in n, with trailing zeros.
+    t      visible fractional digits in n, without trailing zeros.
+    c      compact decimal exponent value: exponent of the power of 10 used in compact decimal formatting.
+    e      currently, synonym for 'c'. however, may be redefined in the future.
