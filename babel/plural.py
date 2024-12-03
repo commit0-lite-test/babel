@@ -479,3 +479,13 @@ class _UnicodeCompiler(_Compiler):
     compile_and = _binary_compiler('%s and %s')
     compile_or = _binary_compiler('%s or %s')
     compile_mod = _binary_compiler('%s mod %s')
+    Symbol Value
+    ------ ---------------------------------------------------------------
+    n      absolute value of the source number (integer and decimals).
+    i      integer digits of n.
+    v      number of visible fraction digits in n, with trailing zeros.
+    w      number of visible fraction digits in n, without trailing zeros.
+    f      visible fractional digits in n, with trailing zeros.
+    t      visible fractional digits in n, without trailing zeros.
+    c      compact decimal exponent value: exponent of the power of 10 used in compact decimal formatting.
+    e      currently, synonym for 'c'. however, may be redefined in the future.
